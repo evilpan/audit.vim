@@ -1,10 +1,41 @@
 #!/bin/bash
 DB_DIR="$HOME/audit.vim"
 DB_INDEX="$DB_DIR/index"
+FILE_EXTENSIONS=$(dirname $(realpath $0))/patterns.txt
+FILE_LIST="audit.files"
+CTAG_FILE=".tags"
+SRC_DIR="."
 
-function create_db() {
-
+log() {
+    echo "[+] $@"
 }
+
+function create_flist() {
+    local cmd="find $SRC_DIR -name LICENCES"
+    for ext in `cat $FILE_EXTENSIONS`;do
+        cmd="$cmd -o -name '$ext'"
+    done
+    log "collecting $FILE_LIST"
+    eval $cmd > $FILE_LIST
+    log "found `cat $FILE_LIST | wc -l` files"
+}
+
+function create_ctags() {
+
+    log "creating ctags ..."
+    ctags --fields=+l --links=no -f $CTAG_FILE -L $FILE_LIST
+    log "ctags saved to $CTAG_FILE"
+}
+
+function create_cscope() {
+
+    log "creating cscope db"
+}
+
+create_flist
+create_ctags
+create_cscope
+
 
 function pz_audit() {
     local opt=$1
