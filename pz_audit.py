@@ -124,6 +124,7 @@ def do_info():
     sessions = get_sessions()
     fields = ['name', 'files', 'tags', 'cscope']
     t = PrettyTable(field_names=fields)
+    t.align = "l"
     for src in sessions:
         f_list = os.path.join(src, Constants.OUT_LIST)
         f_tags = os.path.join(src, Constants.OUT_TAGS)
