@@ -120,7 +120,7 @@ def do_clean(src):
             log("remove", dat)
             os.remove(dat)
 
-def do_list():
+def do_info():
     sessions = get_sessions()
     fields = ['name', 'files', 'tags', 'cscope']
     t = PrettyTable(field_names=fields)
@@ -134,8 +134,6 @@ def do_list():
 
 def do_view(args):
     sessions = get_sessions()
-    env = os.environ.copy()
-    env['AUDIT_VIM'] = '1'
     vim = 'vim'
     if args.gui:
         vim = 'gvim'
@@ -155,7 +153,9 @@ def do_view(args):
         ])
     if args.file:
         cmd.append(args.file)
-    sb.call(cmd)
+    env = os.environ.copy()
+    env['AUDIT_VIM'] = '1'
+    sb.call(cmd, env=env)
 
 def main():
     parser = argparse.ArgumentParser(description='lightweight code audit system with vim')
@@ -168,7 +168,7 @@ def main():
     p_clean = subparsers.add_parser('clean', help='remove audit session')
     p_clean.add_argument('src', nargs='?', default='.')
 
-    p_list = subparsers.add_parser('list', help='list audit sessions')
+    p_info = subparsers.add_parser('info', help='show info of audit sessions')
 
     p_view = subparsers.add_parser('view', help='vim wrapper to view files')
     p_view.add_argument('file', nargs="?", help='filename to view')
@@ -180,8 +180,8 @@ def main():
         do_make(args.src, args.force)
     elif args.action == 'clean':
         do_clean(args.src)
-    elif args.action == 'list':
-        do_list()
+    elif args.action == 'info':
+        do_info()
     elif args.action == 'view':
         do_view(args)
 
