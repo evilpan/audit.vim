@@ -133,7 +133,7 @@ def do_info():
         t.add_row(row)
     print(t)
 
-def do_view(args):
+def do_open(args):
     sessions = get_sessions()
     vim = 'vim'
     if args.gui:
@@ -171,10 +171,10 @@ def main():
 
     p_info = subparsers.add_parser('info', help='show info of audit sessions')
 
-    p_view = subparsers.add_parser('view', help='vim wrapper to view files')
-    p_view.add_argument('file', nargs="?", help='filename to view')
-    p_view.add_argument('-t', dest='tag', help='view tag')
-    p_view.add_argument('-g', dest='gui', action='store_true', help='use gvim instead of vim')
+    p_open = subparsers.add_parser('open', help='vim wrapper to open files')
+    p_open.add_argument('file', nargs="?", help='filename to open')
+    p_open.add_argument('-t', dest='tag', help='open tag')
+    p_open.add_argument('-g', dest='gui', action='store_true', help='use gvim instead of vim')
 
     args = parser.parse_args()
     if args.action == 'make':
@@ -183,8 +183,8 @@ def main():
         do_clean(args.src)
     elif args.action == 'info':
         do_info()
-    elif args.action == 'view':
-        do_view(args)
+    elif args.action == 'open':
+        do_open(args)
 
 
 if __name__ == '__main__':
