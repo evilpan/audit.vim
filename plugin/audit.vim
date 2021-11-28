@@ -50,6 +50,9 @@ endif
 
 " ctags/taglist.vim shortcuts --- {{{
 set tags=.tags; " upward search for ctags file
+" let Tlist_File_Fold_Auto_Close = 1
+let Tlist_Show_One_File = 1
+let Tlist_Exit_OnlyWindow = 1
 nnoremap <leader>o :TlistToggle<CR>
 " }}}
 
