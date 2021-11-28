@@ -68,11 +68,13 @@ def create_filelist(src, out):
 
 def create_tags(flist, out):
     log("adding ctags ...")
+    sb.call(['rm', '-f', out])
     cmd = ['ctags', '--fields=+l', '--links=no', '-L', flist, '-f', out]
     sb.call(cmd)
 
 def create_cscope(flist, out):
     log("adding cscope ...")
+    sb.call(['rm', '-f', out])
     cmd = ['cscope', '-b', '-i', flist, '-f', out]
     sb.call(cmd)
 

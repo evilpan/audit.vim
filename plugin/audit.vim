@@ -6,6 +6,9 @@ if $AUDIT_VIM != ""
         " disable smart directory changing
         autocmd!
     augroup END
+    " remap JK to navigate quickfix
+    nnoremap J :cnext<cr>
+    nnoremap K :cprev<cr>
 endif
 
 " augroup vimrc
@@ -16,25 +19,38 @@ endif
 
 " asyncrun.vim shortcuts --- {{{
 nnoremap <leader>q :call asyncrun#quickfix_toggle(12)<CR>
-nnoremap <leader><tab> :cnext<cr>
-nnoremap <leader><s-tab> :cprev<cr>
 command! -nargs=+ -complete=tag Grep AsyncRun -cwd=<root> rg "-n" <args>
+function! GrepOperator(type)
+    " copy the selected word
+    let l:saved_unnamed_register = @@
+    if a:type ==# 'v'
+        normal! `<v`>y
+    elseif a:type ==# 'char'
+        normal! `[v`]y
+    else
+        return
+    endif
+    " escape regex special characters
+    let l:regex = escape(@@, '()[].*?')
+    execute "AsyncRun! -cwd=<root> rg -n " . shellescape(l:regex)
+    let @@ = l:saved_unnamed_register
+endfunction
 
-" https://github.com/skywind3000/asyncrun.vim/wiki/Better-way-for-C-and-Cpp-development-in-Vim-8#grep-symbols
 if has('win32') || has('win64')
-    noremap <silent><F2> :AsyncRun! -cwd=<root> findstr /n /s /C:"<C-R><C-W>"
+    nnoremap <silent><F2> :AsyncRun! -cwd=<root> findstr /n /s /C:"<C-R><C-W>"
             \ "\%CD\%\*.h" "\%CD\%\*.c*" <cr>
 else
     " noremap <silent><F2> :AsyncRun! -cwd=<root> grep -n -s -R <C-R><C-W>
     "         \ --include='*.h' --include='*.c*' '<root>' <cr>
     " omit search path
-    noremap <silent><F2> :AsyncRun! -cwd=<root> rg -n -w <C-R><C-W> <cr>
+    nnoremap <silent><F2> :AsyncRun! -cwd=<root> rg -n -w <C-R><C-W> <cr>
+    vnoremap <silent><F2> :<c-u>call GrepOperator(visualmode())<cr>
 endif
 """ }}}
 
 " ctags/taglist.vim shortcuts --- {{{
 set tags=.tags; " upward search for ctags file
-nnoremap <leader>t :TlistToggle<CR>
+nnoremap <leader>o :TlistToggle<CR>
 " }}}
 
 " cscope shortcuts --- {{{
@@ -46,6 +62,8 @@ function CScopeFind(key, val)
         echo "Not Found: " . a:key . " " . a:val
         return 1
     endtry
+    " jump back
+    execute "normal! \<c-o>"
     call asyncrun#quickfix_toggle(12, 1)
 endfunction
 
@@ -79,7 +97,7 @@ if has("cscope")
     " nnoremap <leader>fi :cscope find i ^<C-R>=expand("<cfile>")<CR>$<CR>
     " nnoremap <leader>fd :cscope find d <C-R>=expand("<cword>")<CR><CR>
     nnoremap <leader>fs :call CScopeFind("s", expand("<cword>"))<CR>
-    nnoremap <leader>fg :call CScopeFind("g", expand("<cword>"))<CR>
+    nnoremap <leader>fg :cstag <c-r>=expand('<cword>')<CR><CR>
     nnoremap <leader>fc :call CScopeFind("c", expand("<cword>"))<CR>
     nnoremap <leader>ft :call CScopeFind("t", expand("<cword>"))<CR>
     nnoremap <leader>fe :call CScopeFind("e", expand("<cword>"))<CR>
