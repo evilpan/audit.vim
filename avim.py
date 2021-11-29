@@ -159,7 +159,7 @@ def do_open(args):
     if args.file:
         cmd.append(args.file)
     env = os.environ.copy()
-    env['AUDIT_VIM'] = '1'
+    env['AUDIT_VIM'] = root
     sb.call(cmd, env=env)
 
 def main():

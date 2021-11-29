@@ -9,6 +9,7 @@ if $AUDIT_VIM != ""
     " remap JK to navigate quickfix
     nnoremap J :cnext<cr>
     nnoremap K :cprev<cr>
+    let g:asyncrun_root = $AUDIT_VIM
 endif
 
 " augroup vimrc
