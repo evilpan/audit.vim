@@ -72,10 +72,12 @@ def create_tags(flist, out):
     cmd = ['ctags', '--fields=+l', '--links=no', '-L', flist, '-f', out]
     sb.call(cmd)
 
-def create_cscope(flist, out):
+def create_cscope(flist, out, kernel=False):
     log("adding cscope ...")
     sb.call(['rm', '-f', out])
     cmd = ['cscope', '-b', '-i', flist, '-f', out]
+    if kernel:
+        cmd.append('-k')
     sb.call(cmd)
 
 def get_sessions():
@@ -88,7 +90,7 @@ def update_sessions(sessions):
     with open(Constants.INDEX_FILE, "w") as f:
         json.dump(sessions, f)
 
-def do_make(src, force=False):
+def do_make(src, force=False, kernel=False):
     src = os.path.abspath(src)
     sessions = get_sessions()
     if src in sessions:
@@ -100,7 +102,7 @@ def do_make(src, force=False):
     f_csdb = os.path.join(src, Constants.OUT_CSDB)
     create_filelist(src, f_list)
     create_tags(f_list, f_tags)
-    create_cscope(f_list, f_csdb)
+    create_cscope(f_list, f_csdb, kernel)
     if src not in sessions:
         sessions.append(src)
         update_sessions(sessions)
@@ -166,6 +168,7 @@ def main():
 
     p_add = subparsers.add_parser('make', help='create new audit session from current directory')
     p_add.add_argument('src', nargs='?', default='.', help='project root direcotry to make')
+    p_add.add_argument('-k', dest='kernel', action='store_true', help='kernel mode')
     p_add.add_argument('-f', dest='force', action='store_true', help='force overrite')
 
     p_clean = subparsers.add_parser('clean', help='remove audit session')
@@ -180,7 +183,7 @@ def main():
 
     args = parser.parse_args()
     if args.action == 'make':
-        do_make(args.src, args.force)
+        do_make(args.src, args.force, args.kernel)
     elif args.action == 'clean':
         do_clean(args.src)
     elif args.action == 'info':
