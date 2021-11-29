@@ -10,6 +10,8 @@ if $AUDIT_VIM != ""
     nnoremap J :cnext<cr>
     nnoremap K :cprev<cr>
     let g:asyncrun_root = $AUDIT_VIM
+    lcd $AUDIT_VIM
+    echom "Project: " . $AUDIT_VIM
 endif
 
 " augroup vimrc

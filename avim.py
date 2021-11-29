@@ -5,14 +5,6 @@ import argparse
 import subprocess as sb
 from prettytable import PrettyTable
 
-class Constants:
-    BASE_DIR = os.path.dirname(os.path.realpath(__file__))
-    INDEX_FILE = os.path.expanduser("~/.audit.json")
-    PATTN_FILE = os.path.join(BASE_DIR, "patterns.txt")
-    OUT_LIST = ".project"
-    OUT_TAGS = ".tags"
-    OUT_CSDB = ".cscope"
-
 def log(msg, *args, **kwargs):
     print('[+]', msg, *args, **kwargs)
 
@@ -37,130 +29,160 @@ def _filesz(filename):
         return 'N/A'
     return sizeof_fmt(os.stat(filename).st_size)
 
-def _find_best_session(startpoint, sessions):
-    if startpoint == '':
-        return None
-    p = os.path.abspath(startpoint)
-    if p in sessions:
-        return p
-    parent = os.path.dirname(p)
-    if parent == p:
-        # recursive?
-        return None
-    return _find_best_session(parent, sessions)
 
-def create_filelist(src, out):
-    log("collecting files ...")
-    cmd = ["find", src, "-type", "f"]
-    flist = set()
-    with open(Constants.PATTN_FILE, 'r') as f:
-        for line in f:
-            flist.add(line.strip())
-    cmd.extend(['-and', '(', '-name', 'Makefile'])
-    for ext in flist:
-        cmd.extend(['-o', '-name', ext])
-    cmd.append(')')
-    data = sb.check_output(cmd)
-    with open(out, 'wb') as f:
-        f.write(data)
-    log("collected {} files: {}".format(
-        _num_lines(out), out))
+class Project(object):
+    OUT_LIST = ".files"
+    OUT_TAGS = ".tags"
+    OUT_CSDB = ".cscope"
 
-def create_tags(flist, out):
-    log("adding ctags ...")
-    sb.call(['rm', '-f', out])
-    cmd = ['ctags', '--fields=+l', '--links=no', '-L', flist, '-f', out]
-    sb.call(cmd)
+    def __init__(self, src):
+        self.src = os.path.abspath(src)
 
-def create_cscope(flist, out, kernel=False):
-    log("adding cscope ...")
-    sb.call(['rm', '-f', out])
-    cmd = ['cscope', '-b', '-i', flist, '-f', out]
-    if kernel:
-        cmd.append('-k')
-    sb.call(cmd)
+    @property
+    def f_list(self):
+        return os.path.join(self.src, self.OUT_LIST)
 
-def get_sessions():
-    if not os.path.exists(Constants.INDEX_FILE):
-        return []
-    with open(Constants.INDEX_FILE, "r") as f:
-        return json.load(f)
+    @property
+    def f_tags(self):
+        return os.path.join(self.src, self.OUT_TAGS)
 
-def update_sessions(sessions):
-    with open(Constants.INDEX_FILE, "w") as f:
-        json.dump(sessions, f)
+    @property
+    def f_csdb(self):
+        return os.path.join(self.src, self.OUT_CSDB)
 
-def do_make(src, force=False, kernel=False):
-    src = os.path.abspath(src)
-    sessions = get_sessions()
-    if src in sessions:
-        log("session existed:", src)
-        if not force:
+    def create_filelist(self, patterns):
+        log("collecting files ...")
+        cmd = ["find", self.src, "-type", "f"]
+        cmd.extend(['-and', '(', '-name', 'Makefile'])
+        for ext in patterns:
+            cmd.extend(['-o', '-name', ext])
+        cmd.append(')')
+        data = sb.check_output(cmd)
+        with open(self.f_list, 'wb') as f:
+            f.write(data)
+        log("collected {} files: {}".format(
+            _num_lines(self.f_list), self.f_list))
+
+    def create_tags(self):
+        log("adding ctags ...")
+        sb.call(['rm', '-f', self.f_tags])
+        cmd = ['ctags', '--fields=+l', '--links=no', '-L', self.f_list, '-f', self.f_tags]
+        sb.call(cmd)
+
+    def create_cscope(self):
+        log("adding cscope ...")
+        sb.call(['rm', '-f', self.f_csdb])
+        cmd = ['cscope', '-b', '-i', self.f_list, '-f', self.f_csdb]
+        # if self.kernel_mode:
+        #     cmd.append('-k')
+        sb.call(cmd)
+
+
+class AVIM:
+    def __init__(self):
+        self.basedir = os.path.dirname(os.path.realpath(__file__))
+        self.pattern_file = os.path.join(self.basedir, "patterns.txt")
+        self.workspace = os.path.expanduser("~/.audit.vim")
+        self.index = os.path.join(self.workspace, "index.json")
+        if not os.path.exists(self.workspace):
+            os.mkdir(self.workspace)
+
+    @property
+    def sessions(self):
+        if not os.path.exists(self.index):
+            return []
+        with open(self.index, "r") as f:
+            return json.load(f)
+
+    @property
+    def patterns(self):
+        out = set()
+        with open(self.pattern_file, 'r') as f:
+            for line in f:
+                out.add(line.strip())
+        return out
+
+    def save_sessions(self, sessions):
+        with open(self.index, "w") as f:
+            json.dump(sessions, f)
+
+    def find_project(self, startpoint, sessions):
+        if startpoint == '':
+            return None
+        p = os.path.abspath(startpoint)
+        if p in sessions:
+            return Project(p)
+        parent = os.path.dirname(p)
+        if parent == p:
+            # recursive?
+            return None
+        return self.find_project(parent, sessions)
+
+    def do_make(self, src, force=False):
+        proj = Project(src)
+        sessions = self.sessions
+        if proj.src in sessions:
+            log("session existed:", proj.src)
+            if not force:
+                return
+        proj.create_filelist(self.patterns)
+        proj.create_tags()
+        proj.create_cscope()
+        if proj.src not in sessions:
+            sessions.append(proj.src)
+            self.save_sessions(sessions)
+
+    def do_clean(self, src):
+        proj = Project(src)
+        sessions = self.sessions
+        if proj.src in sessions:
+            sessions.remove(proj.src)
+            log("remove session:", proj.src)
+            self.save_sessions(sessions)
+        else:
+            log("session not exist")
+        for dat in [proj.f_csdb, proj.f_tags, proj.f_list]:
+            if os.path.exists(dat):
+                log("remove", dat)
+                os.remove(dat)
+
+    def do_info(self):
+        sessions = self.sessions
+        fields = ['name', 'files', 'tags', 'cscope']
+        t = PrettyTable(field_names=fields)
+        t.align = "l"
+        for src in sessions:
+            proj = Project(src)
+            row = [src, _num_lines(proj.f_list), _filesz(proj.f_tags), _filesz(proj.f_csdb)]
+            t.add_row(row)
+        print(t)
+
+    def do_open(self, args):
+        sessions = self.sessions
+        if args.file:
+            startpoint = os.path.dirname(os.path.abspath(args.file))
+        else:
+            startpoint = os.getcwd()
+        proj = self.find_project(startpoint, sessions)
+        if not proj:
+            log("project not found:", startpoint)
             return
-    f_list = os.path.join(src, Constants.OUT_LIST)
-    f_tags = os.path.join(src, Constants.OUT_TAGS)
-    f_csdb = os.path.join(src, Constants.OUT_CSDB)
-    create_filelist(src, f_list)
-    create_tags(f_list, f_tags)
-    create_cscope(f_list, f_csdb, kernel)
-    if src not in sessions:
-        sessions.append(src)
-        update_sessions(sessions)
-
-def do_clean(src):
-    src = os.path.abspath(src)
-    sessions = get_sessions()
-    if src in sessions:
-        sessions.remove(src)
-        log("update session:", src)
-        update_sessions(sessions)
-    else:
-        log("session not exist")
-    f_list = os.path.join(src, Constants.OUT_LIST)
-    f_tags = os.path.join(src, Constants.OUT_TAGS)
-    f_csdb = os.path.join(src, Constants.OUT_CSDB)
-    for dat in [f_csdb, f_tags, f_list]:
-        if os.path.exists(dat):
-            log("remove", dat)
-            os.remove(dat)
-
-def do_info():
-    sessions = get_sessions()
-    fields = ['name', 'files', 'tags', 'cscope']
-    t = PrettyTable(field_names=fields)
-    t.align = "l"
-    for src in sessions:
-        f_list = os.path.join(src, Constants.OUT_LIST)
-        f_tags = os.path.join(src, Constants.OUT_TAGS)
-        f_csdb = os.path.join(src, Constants.OUT_CSDB)
-        row = [src, _num_lines(f_list), _filesz(f_tags), _filesz(f_csdb)]
-        t.add_row(row)
-    print(t)
-
-def do_open(args):
-    sessions = get_sessions()
-    vim = 'vim'
-    if args.gui:
-        vim = 'gvim'
-    cmd = [vim, '-R']
-    if args.tag:
-        cmd.extend(['-t', args.tag])
-    startpoint = '.'
-    if args.file:
-        startpoint = os.path.dirname(args.file)
-    root = _find_best_session(startpoint, sessions)
-    if root:
-        f_csdb = os.path.join(root, Constants.OUT_CSDB)
-        # f_list = os.path.join(root, Constants.OUT_LIST)
+        env = os.environ.copy()
+        vim = 'vim'
+        if args.gui:
+            vim = 'gvim'
+        cmd = [vim, '-R']
+        if args.tag:
+            cmd.extend(['-t', args.tag])
+        if args.file:
+            cmd.append(args.file)
         cmd.extend([
             '-c',
-            "silent cs add %s" % f_csdb,
+            "silent cs add %s" % proj.f_csdb,
         ])
-    if args.file:
-        cmd.append(args.file)
-    env = os.environ.copy()
-    env['AUDIT_VIM'] = root
-    sb.call(cmd, env=env)
+        env['AUDIT_VIM'] = proj.src
+        sb.call(cmd, env=env)
+
 
 def main():
     parser = argparse.ArgumentParser(description='lightweight code audit system with vim')
@@ -182,14 +204,15 @@ def main():
     p_open.add_argument('-g', dest='gui', action='store_true', help='use gvim instead of vim')
 
     args = parser.parse_args()
+    avim = AVIM()
     if args.action == 'make':
-        do_make(args.src, args.force, args.kernel)
+        avim.do_make(args.src, args.force)
     elif args.action == 'clean':
-        do_clean(args.src)
+        avim.do_clean(args.src)
     elif args.action == 'info':
-        do_info()
+        avim.do_info()
     elif args.action == 'open':
-        do_open(args)
+        avim.do_open(args)
 
 
 if __name__ == '__main__':
