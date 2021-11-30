@@ -9,9 +9,10 @@ if $AUDIT_VIM != ""
     " remap JK to navigate quickfix
     nnoremap J :cnext<cr>
     nnoremap K :cprev<cr>
+    nnoremap H :colder<cr>
+    nnoremap L :cnewer<cr>
     let g:asyncrun_root = $AUDIT_VIM
     lcd $AUDIT_VIM
-    echom "Project: " . $AUDIT_VIM
 endif
 
 " augroup vimrc
