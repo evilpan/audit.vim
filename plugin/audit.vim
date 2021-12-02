@@ -108,6 +108,7 @@ if has("cscope")
     nnoremap <leader>fc :call CScopeFind("c", expand("<cword>"))<CR>
     nnoremap <leader>ft :call CScopeFind("t", expand("<cword>"))<CR>
     nnoremap <leader>fe :call CScopeFind("e", expand("<cword>"))<CR>
+    nnoremap <leader>ff :call CScopeFind("f", expand("<cfile>"))<CR>
     nnoremap <leader>fd :call CScopeFind("d", expand("<cword>"))<CR>
 endif
 " }}}

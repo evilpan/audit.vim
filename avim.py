@@ -29,6 +29,33 @@ def _filesz(filename):
         return 'N/A'
     return sizeof_fmt(os.stat(filename).st_size)
 
+def _find_cond(opts, vals, sep='-o'):
+    """
+    e.x:
+    opts = ['-name', '-type']
+    vals = ['hello', 'f']
+    sep = '-o'
+    return: ['(', '-name', 'hello', '-o', '-type', 'f', ')']
+    """
+    if isinstance(opts, str):
+        opts = [opts] * len(vals)
+    else:
+        assert(len(opts) == len(vals))
+    if len(opts) == 0:
+        return []
+    elif len(opts) == 1:
+        return [opts[0], vals[0]]
+    else:
+        cmd = []
+        cmd.append('(')
+        cmd.append(opts[0])
+        cmd.append(vals[0])
+        for i in range(1, len(opts)):
+            cmd.append(sep)
+            cmd.append(opts[i])
+            cmd.append(vals[i])
+        cmd.append(')')
+    return cmd
 
 class Project(object):
     OUT_LIST = ".files"
@@ -50,13 +77,15 @@ class Project(object):
     def f_csdb(self):
         return os.path.join(self.src, self.OUT_CSDB)
 
-    def create_filelist(self, patterns):
+    def collect_files(self, patterns, excludes=None):
+        excludes = excludes if excludes else []
         log("collecting files ...")
-        cmd = ["find", self.src, "-type", "f"]
-        cmd.extend(['-and', '(', '-name', 'Makefile'])
-        for ext in patterns:
-            cmd.extend(['-o', '-name', ext])
-        cmd.append(')')
+        cmd = ["find", self.src]
+        # https://stackoverflow.com/questions/4210042/how-to-exclude-a-directory-in-find-command
+        for ex in excludes:
+            ex = os.path.abspath(ex)
+            cmd.extend(['-not', '(', '-path', ex, '-prune', ')'])
+        cmd.extend(["-type", "f", "-and"] + _find_cond('-name', patterns, '-o'))
         data = sb.check_output(cmd)
         with open(self.f_list, 'wb') as f:
             f.write(data)
@@ -100,7 +129,7 @@ class AVIM:
         with open(self.pattern_file, 'r') as f:
             for line in f:
                 out.add(line.strip())
-        return out
+        return list(out)
 
     def save_sessions(self, sessions):
         with open(self.index, "w") as f:
@@ -118,14 +147,14 @@ class AVIM:
             return None
         return self.find_project(parent, sessions)
 
-    def do_make(self, src, force=False):
-        proj = Project(src)
+    def do_make(self, args):
+        proj = Project(args.src)
         sessions = self.sessions
         if proj.src in sessions:
             log("session existed:", proj.src)
             if not force:
                 return
-        proj.create_filelist(self.patterns)
+        proj.collect_files(self.patterns, args.excludes)
         proj.create_tags()
         proj.create_cscope()
         if proj.src not in sessions:
@@ -191,6 +220,7 @@ def main():
     p_add = subparsers.add_parser('make', help='create new audit session from current directory')
     p_add.add_argument('src', nargs='?', default='.', help='project root direcotry to make')
     p_add.add_argument('-k', dest='kernel', action='store_true', help='kernel mode')
+    p_add.add_argument('-e', dest='excludes', nargs='+', help='exclude pathes')
     p_add.add_argument('-f', dest='force', action='store_true', help='force overrite')
 
     p_clean = subparsers.add_parser('clean', help='remove audit session')
@@ -206,7 +236,7 @@ def main():
     args = parser.parse_args()
     avim = AVIM()
     if args.action == 'make':
-        avim.do_make(args.src, args.force)
+        avim.do_make(args)
     elif args.action == 'clean':
         avim.do_clean(args.src)
     elif args.action == 'info':
