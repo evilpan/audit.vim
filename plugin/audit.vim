@@ -1,7 +1,7 @@
 " light-weight code audit tools
 
 " commom options --- {{{
-if $AUDIT_VIM != ""
+if $AVIM_SRC != ""
     augroup smartchdir
         " disable smart directory changing
         autocmd!
@@ -11,8 +11,11 @@ if $AUDIT_VIM != ""
     nnoremap K :cprev<cr>
     nnoremap H :colder<cr>
     nnoremap L :cnewer<cr>
-    let g:asyncrun_root = $AUDIT_VIM
-    lcd $AUDIT_VIM
+
+    nnoremap [[ [{
+    nnoremap ]] ]}
+    let g:asyncrun_root = $AVIM_SRC
+    lcd $AVIM_SRC
 endif
 
 " augroup vimrc
@@ -53,7 +56,11 @@ endif
 """ }}}
 
 " ctags/taglist.vim shortcuts --- {{{
-set tags=.tags; " upward search for ctags file
+if $AVIM_TAGS != ""
+    set tags=$AVIM_TAGS
+else
+    set tags=.tags; " upward search for ctags file
+endif
 " let Tlist_File_Fold_Auto_Close = 1
 let Tlist_Show_One_File = 1
 let Tlist_Exit_OnlyWindow = 1
@@ -80,7 +87,7 @@ endfunction
 
 if has("cscope")
     set cscopetag           " use cscope tag
-    set cscopetagorder=1    " but search ctags first since it's more accurate
+    set cscopetagorder=1    " cstag search ctags first
     set cscopeverbose       " verbose output
     " set cscoperelative
     set cscopequickfix=s-,c-,d-,i-,t-,e-,a-,g-
@@ -104,9 +111,10 @@ if has("cscope")
     " nnoremap <leader>fi :cscope find i ^<C-R>=expand("<cfile>")<CR>$<CR>
     " nnoremap <leader>fd :cscope find d <C-R>=expand("<cword>")<CR><CR>
     nnoremap <leader>fs :call CScopeFind("s", expand("<cword>"))<CR>
-    nnoremap <leader>fg :cstag <c-r>=expand('<cword>')<CR><CR>
+    nnoremap <leader>fg :call CScopeFind("g", expand("<cword>"))<CR>
     nnoremap <leader>fc :call CScopeFind("c", expand("<cword>"))<CR>
-    nnoremap <leader>ft :call CScopeFind("t", expand("<cword>"))<CR>
+    " nnoremap <leader>ft :call CScopeFind("t", expand("<cword>"))<CR>
+    nnoremap <leader>ft :cstag <c-r>=expand('<cword>')<CR><CR>
     nnoremap <leader>fe :call CScopeFind("e", expand("<cword>"))<CR>
     nnoremap <leader>ff :call CScopeFind("f", expand("<cfile>"))<CR>
     nnoremap <leader>fd :call CScopeFind("d", expand("<cword>"))<CR>

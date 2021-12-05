@@ -209,7 +209,8 @@ class AVIM:
             '-c',
             "silent cs add %s" % proj.f_csdb,
         ])
-        env['AUDIT_VIM'] = proj.src
+        env['AVIM_SRC'] = proj.src
+        env['AVIM_TAGS'] = proj.f_tags # cannot use -c since we want to use vim -t
         sb.call(cmd, env=env)
 
 
