@@ -80,6 +80,8 @@ class Project(object):
     def collect_files(self, patterns, excludes=None):
         excludes = excludes if excludes else []
         log("collecting files ...")
+        if excludes:
+            log("exclude %d pathes" % len(excludes))
         cmd = ["find", self.src]
         # https://stackoverflow.com/questions/4210042/how-to-exclude-a-directory-in-find-command
         for ex in excludes:
@@ -104,8 +106,11 @@ class Project(object):
         cmd = ['cscope', '-b', '-i', self.f_list, '-f', self.f_csdb]
         # if self.kernel_mode:
         #     cmd.append('-k')
-        sb.call(cmd)
-
+        try:
+            sb.call(cmd)
+        except KeyboardInterrupt:
+            log("user interrupt, cleanning...")
+            # TODO: remove n.cscope file
 
 class AVIM:
     def __init__(self):
@@ -152,16 +157,16 @@ class AVIM:
         sessions = self.sessions
         if proj.src in sessions:
             log("session existed:", proj.src)
-            if not force:
+            if not args.force:
                 return
+        else:
+            sessions.append(proj.src)
+            self.save_sessions(sessions)
         proj.collect_files(self.patterns, args.excludes)
         proj.create_tags()
         proj.create_cscope()
-        if proj.src not in sessions:
-            sessions.append(proj.src)
-            self.save_sessions(sessions)
 
-    def do_clean(self, src):
+    def do_rm(self, src):
         proj = Project(src)
         sessions = self.sessions
         if proj.src in sessions:
@@ -205,12 +210,12 @@ class AVIM:
             cmd.extend(['-t', args.tag])
         if args.file:
             cmd.append(args.file)
-        cmd.extend([
-            '-c',
-            "silent cs add %s" % proj.f_csdb,
-        ])
+        if os.path.exists(proj.f_csdb):
+            env['AVIM_CSDB'] = proj.f_csdb
+        if os.path.exists(proj.f_tags):
+            # use envrioment to make "vim -t" work
+            env['AVIM_TAGS'] = proj.f_tags
         env['AVIM_SRC'] = proj.src
-        env['AVIM_TAGS'] = proj.f_tags # cannot use -c since we want to use vim -t
         sb.call(cmd, env=env)
 
 
@@ -224,8 +229,8 @@ def main():
     p_add.add_argument('-e', dest='excludes', nargs='+', help='exclude pathes')
     p_add.add_argument('-f', dest='force', action='store_true', help='force overrite')
 
-    p_clean = subparsers.add_parser('clean', help='remove audit session')
-    p_clean.add_argument('src', nargs='?', default='.')
+    p_rm = subparsers.add_parser('rm', help='remove audit session')
+    p_rm.add_argument('src', nargs='?', default='.')
 
     p_info = subparsers.add_parser('info', help='show info of audit sessions')
 
@@ -238,8 +243,8 @@ def main():
     avim = AVIM()
     if args.action == 'make':
         avim.do_make(args)
-    elif args.action == 'clean':
-        avim.do_clean(args.src)
+    elif args.action == 'rm':
+        avim.do_rm(args.src)
     elif args.action == 'info':
         avim.do_info()
     elif args.action == 'open':

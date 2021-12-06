@@ -68,6 +68,9 @@ nnoremap <leader>o :TlistToggle<CR>
 " }}}
 
 " cscope shortcuts --- {{{
+if $AVIM_CSDB != ""
+    silent cs add $AVIM_CSDB
+endif
 
 function CScopeFind(key, val)
     try
