@@ -1,6 +1,9 @@
 " light-weight code audit tools
 
 " commom options --- {{{
+nnoremap [[ [{
+nnoremap ]] ]}
+
 if $AVIM_SRC != ""
     augroup smartchdir
         " disable smart directory changing
@@ -12,10 +15,9 @@ if $AVIM_SRC != ""
     nnoremap H :colder<cr>
     nnoremap L :cnewer<cr>
 
-    nnoremap [[ [{
-    nnoremap ]] ]}
     let g:asyncrun_root = $AVIM_SRC
     lcd $AVIM_SRC
+else
 endif
 
 " augroup vimrc

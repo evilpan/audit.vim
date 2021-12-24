@@ -230,7 +230,7 @@ def main():
     p_add.add_argument('-f', dest='force', action='store_true', help='force overrite')
 
     p_rm = subparsers.add_parser('rm', help='remove audit session')
-    p_rm.add_argument('src', nargs='?', default='.')
+    p_rm.add_argument('src', nargs='*', default=['.'])
 
     p_info = subparsers.add_parser('info', help='show info of audit sessions')
 
@@ -244,7 +244,8 @@ def main():
     if args.action == 'make':
         avim.do_make(args)
     elif args.action == 'rm':
-        avim.do_rm(args.src)
+        for src in args.src:
+            avim.do_rm(src)
     elif args.action == 'info':
         avim.do_info()
     elif args.action == 'open':
