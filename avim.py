@@ -53,25 +53,28 @@ class Project(object):
     def collect_files(self, suffixes, excludes=None):
         excludes = [Path(e) for e in excludes] if excludes else []
         log("collecting files ...")
-        if excludes:
-            log("exclude %d pathes" % len(excludes))
         out = []
         num_ignored = 0
+        num_excluded = 0
         for p in Path(self.src).glob("**/*"):
             if not p.is_file():
                 continue
-            exc = False
-            for ex in excludes:
-                if p.is_relative_to(ex):
-                    exc = True
-                    break
-            if exc:
-                num_ignored += 1
-                continue
+            if excludes:
+                exc = False
+                for ex in excludes:
+                    if p.is_relative_to(ex):
+                        exc = True
+                        break
+                if exc:
+                    num_excluded += 1
+                    continue
             if p.suffix in suffixes:
+                # relative path
                 out.append(str(p))
-        log("collected {} files, {} ignored".format(
-            len(out), num_ignored))
+            else:
+                num_ignored += 1
+        log("collected {} files, {} ignored, {} excluded".format(
+            len(out), num_ignored, num_excluded))
         with open(self.f_list, 'w') as f:
             for line in out:
                 f.write(line + "\n")
