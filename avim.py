@@ -3,6 +3,7 @@ import os
 import json
 import argparse
 import subprocess as sb
+from pathlib import Path
 from prettytable import PrettyTable
 
 def log(msg, *args, **kwargs):
@@ -29,34 +30,6 @@ def _filesz(filename):
         return 'N/A'
     return sizeof_fmt(os.stat(filename).st_size)
 
-def _find_cond(opts, vals, sep='-o'):
-    """
-    e.x:
-    opts = ['-name', '-type']
-    vals = ['hello', 'f']
-    sep = '-o'
-    return: ['(', '-name', 'hello', '-o', '-type', 'f', ')']
-    """
-    if isinstance(opts, str):
-        opts = [opts] * len(vals)
-    else:
-        assert(len(opts) == len(vals))
-    if len(opts) == 0:
-        return []
-    elif len(opts) == 1:
-        return [opts[0], vals[0]]
-    else:
-        cmd = []
-        cmd.append('(')
-        cmd.append(opts[0])
-        cmd.append(vals[0])
-        for i in range(1, len(opts)):
-            cmd.append(sep)
-            cmd.append(opts[i])
-            cmd.append(vals[i])
-        cmd.append(')')
-    return cmd
-
 class Project(object):
     OUT_LIST = ".files"
     OUT_TAGS = ".tags"
@@ -77,22 +50,31 @@ class Project(object):
     def f_csdb(self):
         return os.path.join(self.src, self.OUT_CSDB)
 
-    def collect_files(self, patterns, excludes=None):
-        excludes = excludes if excludes else []
+    def collect_files(self, suffixes, excludes=None):
+        excludes = [Path(e) for e in excludes] if excludes else []
         log("collecting files ...")
         if excludes:
             log("exclude %d pathes" % len(excludes))
-        cmd = ["find", self.src]
-        # https://stackoverflow.com/questions/4210042/how-to-exclude-a-directory-in-find-command
-        for ex in excludes:
-            ex = os.path.abspath(ex)
-            cmd.extend(['-not', '(', '-path', ex, '-prune', ')'])
-        cmd.extend(["-type", "f", "-and"] + _find_cond('-name', patterns, '-o'))
-        data = sb.check_output(cmd)
-        with open(self.f_list, 'wb') as f:
-            f.write(data)
-        log("collected {} files: {}".format(
-            _num_lines(self.f_list), self.f_list))
+        out = []
+        num_ignored = 0
+        for p in Path(self.src).glob("**/*"):
+            if not p.is_file():
+                continue
+            exc = False
+            for ex in excludes:
+                if p.is_relative_to(ex):
+                    exc = True
+                    break
+            if exc:
+                num_ignored += 1
+                continue
+            if p.suffix in suffixes:
+                out.append(str(p))
+        log("collected {} files, {} ignored".format(
+            len(out), num_ignored))
+        with open(self.f_list, 'w') as f:
+            for line in out:
+                f.write(line + "\n")
 
     def create_tags(self):
         log("adding ctags ...")
@@ -103,11 +85,18 @@ class Project(object):
     def create_cscope(self):
         log("adding cscope ...")
         sb.call(['rm', '-f', self.f_csdb])
-        cmd = ['cscope', '-b', '-i', self.f_list, '-f', self.f_csdb]
+        buf = ''
+        with open(self.f_list, 'r') as f:
+            for line in f:
+                if ' ' in line:
+                    line = '"%s"\n' % line[:-1]
+                buf += line
+        cmd = ['cscope', '-b', '-i', "-", '-f', self.f_csdb]
         # if self.kernel_mode:
         #     cmd.append('-k')
         try:
-            sb.call(cmd)
+            p = sb.Popen(cmd, stdin=sb.PIPE)
+            p.communicate(input=buf.encode())
         except KeyboardInterrupt:
             log("user interrupt, cleanning...")
             # TODO: remove n.cscope file
@@ -115,7 +104,7 @@ class Project(object):
 class AVIM:
     def __init__(self):
         self.basedir = os.path.dirname(os.path.realpath(__file__))
-        self.pattern_file = os.path.join(self.basedir, "patterns.txt")
+        self.suffix_file = os.path.join(self.basedir, "suffixes.txt")
         self.workspace = os.path.expanduser("~/.audit.vim")
         self.index = os.path.join(self.workspace, "index.json")
         if not os.path.exists(self.workspace):
@@ -129,9 +118,9 @@ class AVIM:
             return json.load(f)
 
     @property
-    def patterns(self):
+    def suffixes(self):
         out = set()
-        with open(self.pattern_file, 'r') as f:
+        with open(self.suffix_file, 'r') as f:
             for line in f:
                 out.add(line.strip())
         return list(out)
@@ -162,7 +151,7 @@ class AVIM:
         else:
             sessions.append(proj.src)
             self.save_sessions(sessions)
-        proj.collect_files(self.patterns, args.excludes)
+        proj.collect_files(self.suffixes, args.excludes)
         proj.create_tags()
         proj.create_cscope()
 
