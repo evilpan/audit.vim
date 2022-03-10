@@ -15,6 +15,10 @@ if $AVIM_SRC != ""
     nnoremap H :colder<cr>
     nnoremap L :cnewer<cr>
 
+    " remap movement shortcuts
+    nnoremap i 2jzz
+    nnoremap o 2kzz
+
     let g:asyncrun_root = $AVIM_SRC
     lcd $AVIM_SRC
 else
