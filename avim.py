@@ -51,7 +51,7 @@ class Project(object):
         return os.path.join(self.src, self.OUT_CSDB)
 
     def collect_files(self, suffixes, excludes=None):
-        excludes = [Path(e) for e in excludes] if excludes else []
+        excludes = [Path(e).absolute() for e in excludes] if excludes else []
         log("collecting files ...")
         out = []
         num_ignored = 0
@@ -62,7 +62,7 @@ class Project(object):
             if excludes:
                 exc = False
                 for ex in excludes:
-                    if p.is_relative_to(ex):
+                    if ex in p.absolute().parents:
                         exc = True
                         break
                 if exc:
@@ -197,7 +197,7 @@ class AVIM:
         vim = 'vim'
         if args.gui:
             vim = 'gvim'
-        cmd = [vim, '-R']
+        cmd = [vim, '-M']
         if args.tag:
             cmd.extend(['-t', args.tag])
         if args.file:

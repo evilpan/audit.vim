@@ -29,6 +29,7 @@
 .js
 .json
 .jsp
+.ts
 .l
 .m
 .mc
