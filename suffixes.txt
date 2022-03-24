@@ -54,6 +54,8 @@
 .swift
 .tex
 .txt
+.v
+.vala
 .vbs
 .vim
 .xml

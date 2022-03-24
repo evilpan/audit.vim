@@ -27,7 +27,7 @@ cscope.vim
 <leader>q - toggle quickfix list (bottom)
 
 F2 - search with rg
-i/o - move down/up
+i/o - move up/down
 ```
 
 Note the `<leader>` is `,`
