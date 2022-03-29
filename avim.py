@@ -145,6 +145,9 @@ class AVIM:
         return self.find_project(parent, sessions)
 
     def do_make(self, args):
+        if not os.path.exists(args.src):
+            log("project not exists:", args.src)
+            return
         proj = Project(args.src)
         sessions = self.sessions
         if proj.src in sessions:
