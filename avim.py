@@ -185,14 +185,6 @@ class AVIM:
 
     def do_open(self, args):
         sessions = self.sessions
-        if args.file:
-            startpoint = os.path.dirname(os.path.abspath(args.file))
-        else:
-            startpoint = os.getcwd()
-        proj = self.find_project(startpoint, sessions)
-        if not proj:
-            log("project not found:", startpoint)
-            return
         env = os.environ.copy()
         vim = 'vim'
         if args.gui:
@@ -202,12 +194,20 @@ class AVIM:
             cmd.extend(['-t', args.tag])
         if args.file:
             cmd.append(args.file)
-        if os.path.exists(proj.f_csdb):
-            env['AVIM_CSDB'] = proj.f_csdb
-        if os.path.exists(proj.f_tags):
-            # use envrioment to make "vim -t" work
-            env['AVIM_TAGS'] = proj.f_tags
-        env['AVIM_SRC'] = proj.src
+            startpoint = os.path.dirname(os.path.abspath(args.file))
+        else:
+            startpoint = os.getcwd()
+        proj = self.find_project(startpoint, sessions)
+        if not proj:
+            log("project not found:", startpoint)
+            env['AVIM_SRC'] = os.getcwd()
+        else:
+            env['AVIM_SRC'] = proj.src
+            if os.path.exists(proj.f_csdb):
+                env['AVIM_CSDB'] = proj.f_csdb
+            if os.path.exists(proj.f_tags):
+                # use envrioment to make "vim -t" work
+                env['AVIM_TAGS'] = proj.f_tags
         sb.call(cmd, env=env)
 
 
