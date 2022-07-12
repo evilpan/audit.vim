@@ -18,6 +18,8 @@ if $AVIM_SRC != ""
     " remap movement shortcuts
     nnoremap o 2jzz
     nnoremap i 2kzz
+    nnoremap u <c-y>
+    nnoremap d <c-e>
 
     let g:asyncrun_root = $AVIM_SRC
     lcd $AVIM_SRC
