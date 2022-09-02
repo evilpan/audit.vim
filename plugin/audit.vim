@@ -88,7 +88,9 @@ function CScopeFind(key, val)
         return 1
     endtry
     " jump back
-    execute "normal! \<c-o>"
+    if len(getqflist()) > 1
+        execute "normal! \<c-o>"
+    endif
     call asyncrun#quickfix_toggle(12, 1)
 endfunction
 
