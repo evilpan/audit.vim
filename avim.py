@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 import os
+import time
 import json
+import shutil
 import argparse
 import subprocess as sb
 from pathlib import Path
@@ -35,24 +37,40 @@ def _filesz(filename):
 
 
 class Project(object):
-    OUT_LIST = ".files"
-    OUT_TAGS = ".tags"
-    OUT_CSDB = ".cscope"
+    OUT_LIST = "files"
+    OUT_TAGS = "tags"
+    OUT_CSDB = "cscope"
 
-    def __init__(self, src):
+    def __init__(self, src, data=None):
+        # full path
         self.src = os.path.abspath(src)
+        self.data = data
+
+    def create(self, suffixes, excludes=None):
+        if self.data is None:
+            # create new data dir
+            self.data = os.path.join(WORKSPACE, str(int(time.time())))
+        if not os.path.exists(self.data):
+            os.mkdir(self.data)
+        self.collect_files(suffixes, excludes)
+        self.create_tags()
+        self.create_cscope()
+
+    def remove(self):
+        if os.path.exists(self.data):
+            shutil.rmtree(self.data)
 
     @property
     def f_list(self):
-        return os.path.join(self.src, self.OUT_LIST)
+        return os.path.join(self.data, self.OUT_LIST)
 
     @property
     def f_tags(self):
-        return os.path.join(self.src, self.OUT_TAGS)
+        return os.path.join(self.data, self.OUT_TAGS)
 
     @property
     def f_csdb(self):
-        return os.path.join(self.src, self.OUT_CSDB)
+        return os.path.join(self.data, self.OUT_CSDB)
 
     def collect_files(self, suffixes, excludes=None):
         excludes = [Path(e).absolute() for e in excludes] if excludes else []
@@ -147,7 +165,7 @@ class AVIM:
             return None
         p = os.path.abspath(startpoint)
         if p in sessions:
-            return Project(p)
+            return Project(p, sessions[p])
         parent = os.path.dirname(p)
         if parent == p:
             # recursive?
@@ -155,43 +173,45 @@ class AVIM:
         return self.find_project(parent, sessions)
 
     def do_make(self, args):
-        if not os.path.exists(args.src):
-            log("project not exists:", args.src)
-            return
         proj = Project(args.src)
+        if not os.path.exists(proj.src):
+            log("path not exists:", proj.src)
+            return
         sessions = self.sessions
         if proj.src in sessions:
-            log("session existed:", proj.src)
+            log("project existed:", proj.src)
             if not args.force:
                 return
-        else:
-            sessions.append(proj.src)
-            self.save_sessions(sessions)
-        proj.collect_files(self.suffixes, args.excludes)
-        proj.create_tags()
-        proj.create_cscope()
-
-    def do_rm(self, src):
-        proj = Project(src)
+            # clear old session first
+            self.do_rm(proj.src, sessions[proj.src])
+        # create session
+        proj.create(self.suffixes, args.excludes)
         sessions = self.sessions
-        if proj.src in sessions:
-            sessions.remove(proj.src)
-            log("remove session:", proj.src)
-            self.save_sessions(sessions)
-        else:
+        sessions[proj.src] = proj.data
+        self.save_sessions(sessions)
+
+    def do_rm(self, src, sessions=None):
+        """
+        src: abspath of source tree
+        """
+        if sessions is None:
+            sessions = self.sessions
+        if src not in sessions:
             log("session not exist")
-        for dat in [proj.f_csdb, proj.f_tags, proj.f_list]:
-            if os.path.exists(dat):
-                log("remove", dat)
-                os.remove(dat)
+            return
+        proj = Project(src, sessions[src])
+        proj.remove()
+        log("remove session:", proj.src)
+        del sessions[proj.src]
+        self.save_sessions(sessions)
 
     def do_info(self):
         sessions = self.sessions
-        fields = ['name', 'files', 'tags', 'cscope']
+        fields = ['source', 'files', 'tags', 'cscope']
         t = PrettyTable(field_names=fields)
         t.align = "l"
-        for src in sessions:
-            proj = Project(src)
+        for src, data in sessions.items():
+            proj = Project(src, data)
             row = [src, _num_lines(proj.f_list), _filesz(proj.f_tags), _filesz(proj.f_csdb)]
             t.add_row(row)
         print(t)
@@ -250,6 +270,7 @@ def main():
         avim.do_make(args)
     elif args.action == 'rm':
         for src in args.src:
+            src = os.path.abspath(src)
             avim.do_rm(src)
     elif args.action == 'info':
         avim.do_info()
