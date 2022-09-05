@@ -6,6 +6,8 @@ import subprocess as sb
 from pathlib import Path
 from prettytable import PrettyTable
 
+WORKSPACE = os.path.expanduser("~/.audit.vim")
+
 def log(msg, *args, **kwargs):
     print('[+]', msg, *args, **kwargs)
 
@@ -25,10 +27,12 @@ def _num_lines(filename):
             count += 1
     return count
 
+
 def _filesz(filename):
     if not os.path.exists(filename):
         return 'N/A'
     return sizeof_fmt(os.stat(filename).st_size)
+
 
 class Project(object):
     OUT_LIST = ".files"
@@ -104,19 +108,25 @@ class Project(object):
             log("user interrupt, cleanning...")
             # TODO: remove n.cscope file
 
+
 class AVIM:
     def __init__(self):
         self.basedir = os.path.dirname(os.path.realpath(__file__))
         self.suffix_file = os.path.join(self.basedir, "suffixes.txt")
-        self.workspace = os.path.expanduser("~/.audit.vim")
-        self.index = os.path.join(self.workspace, "index.json")
-        if not os.path.exists(self.workspace):
-            os.mkdir(self.workspace)
+        self.index = os.path.join(WORKSPACE, "index.json")
+        if not os.path.exists(WORKSPACE):
+            os.mkdir(WORKSPACE)
 
     @property
     def sessions(self):
+        """
+        {
+            "src": "data_dir",
+            "src2": "data_dir2",
+        }
+        """
         if not os.path.exists(self.index):
-            return []
+            return {}
         with open(self.index, "r") as f:
             return json.load(f)
 
