@@ -103,13 +103,15 @@ class Project(object):
 
     def create_tags(self):
         log("adding ctags ...")
-        sb.call(['rm', '-f', self.f_tags])
+        if os.path.exists(self.f_tags):
+            os.remove(self.f_tags)
         cmd = ['ctags', '--fields=+l', '--links=no', '-L', self.f_list, '-f', self.f_tags]
         sb.call(cmd)
 
     def create_cscope(self):
         log("adding cscope ...")
-        sb.call(['rm', '-f', self.f_csdb])
+        if os.path.exists(self.f_csdb):
+            os.remove(self.f_csdb)
         buf = ''
         with open(self.f_list, 'r') as f:
             for line in f:
