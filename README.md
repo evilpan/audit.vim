@@ -9,8 +9,8 @@ which contains:
 
 # Reference
 
-https://github.com/chazy/cscope_maps/blob/master/plugin/cscope_maps.vim
-cscope.vim
+- https://github.com/chazy/cscope_maps/blob/master/plugin/cscope_maps.vim
+- cscope.vim
 
 # Quick Start
 
@@ -34,4 +34,4 @@ Note the `<leader>` is `,`
 
 # TODO
 
-[ ] move .tags/.files/.cscope to global directory avoiding project pollution
+[x] move .tags/.files/.cscope to global directory avoiding project pollution

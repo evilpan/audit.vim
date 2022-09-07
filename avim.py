@@ -222,7 +222,7 @@ class AVIM:
         vim = 'vim'
         if args.gui:
             vim = 'gvim'
-        cmd = [vim, '-M']
+        cmd = [vim, '-M', '-n']
         if args.tag:
             cmd.extend(['-t', args.tag])
         if args.file:
