@@ -9,8 +9,16 @@ which contains:
 
 # Reference
 
+- https://github.com/universal-ctags/ctags
 - https://github.com/chazy/cscope_maps/blob/master/plugin/cscope_maps.vim
 - cscope.vim
+
+# Install
+```sh
+brew install universal-ctags
+brew install cscope
+make install
+```
 
 # Quick Start
 
