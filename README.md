@@ -1,6 +1,6 @@
 # VIM Audit
 
-Light-weight Code Audit with VIM
+Light-weight code audit with VIM
 
 which contains:
 
@@ -20,6 +20,12 @@ brew install cscope
 make install
 ```
 
+Extra tools and plugins:
+
+- [asyncrun.vim](https://github.com/skywind3000/asyncrun.vim) -- run shell command async in vim.
+- [ripgrep](https://github.com/BurntSushi/ripgrep) -- rg tool to perform fast search.
+- [fzf](https://github.com/junegunn/fzf) -- fuzzy search path, not used yet.
+
 # Quick Start
 
 ```
@@ -38,8 +44,4 @@ F2 - search with rg
 i/o - move up/down
 ```
 
-Note the `<leader>` is `,`
-
-# TODO
-
-[x] move .tags/.files/.cscope to global directory avoiding project pollution
+> Note: the `<leader>` is config by user, which is `,` for me.

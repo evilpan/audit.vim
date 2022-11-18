@@ -94,10 +94,6 @@ function CScopeFind(key, val)
     call asyncrun#quickfix_toggle(12, 1)
 endfunction
 
-" set efm for cscope shell command output
-" remote/proto/EdrMessage.pb.cc MergeFrom 7401 mutable_process_info()->::oneagent_proto
-" set errorformat+=%f\ %o\ %l\ %m
-
 if has("cscope")
     set cscopetag           " use cscope tag
     set cscopetagorder=1    " cstag search ctags first
