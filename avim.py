@@ -243,6 +243,8 @@ class AVIM:
             if os.path.exists(proj.f_tags):
                 # use envrioment to make "vim -t" work
                 env['AVIM_TAGS'] = proj.f_tags
+        if args.extra_args:
+            cmd.extend(args.extra_args)
         sb.call(cmd, env=env)
 
 
@@ -265,6 +267,7 @@ def main():
     p_open.add_argument('file', nargs="?", help='filename to open')
     p_open.add_argument('-t', dest='tag', help='open tag')
     p_open.add_argument('-g', dest='gui', action='store_true', help='use gvim instead of vim')
+    p_open.add_argument("extra_args", nargs="*", help="extra arguments that pass to vim")
 
     args = parser.parse_args()
     avim = AVIM()
