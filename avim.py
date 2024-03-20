@@ -6,7 +6,6 @@ import shutil
 import argparse
 import subprocess as sb
 from pathlib import Path
-from prettytable import PrettyTable
 
 WORKSPACE = os.path.expanduser("~/.audit.vim")
 
@@ -208,6 +207,7 @@ class AVIM:
         self.save_sessions(sessions)
 
     def do_info(self):
+        from prettytable import PrettyTable
         sessions = self.sessions
         fields = ['source', 'files', 'tags', 'cscope']
         t = PrettyTable(field_names=fields)
