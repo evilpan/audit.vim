@@ -247,10 +247,22 @@ class AVIM:
             cmd.extend(args.extra_args)
         sb.call(cmd, env=env)
 
+    def live_grep(self, args):
+        vim = 'vim'
+        if args.gui:
+            vim = 'gvim'
+        cmd = [vim, '-c', 'set noautochdir']
+        if args.rg:
+            cmd.extend(['-c', f'RG {args.rg}'])
+        else:
+            cmd.extend(['-c', 'Files'])
+        sb.call(cmd)
+
 
 def main():
     parser = argparse.ArgumentParser(description='lightweight code audit system with vim')
     subparsers = parser.add_subparsers(dest='action', help='sub actions')
+    parser.add_argument('-g', dest='gui', action='store_true', help='use gvim instead of vim')
 
     p_add = subparsers.add_parser('make', help='create new audit session from current directory')
     p_add.add_argument('src', nargs='?', default='.', help='project root direcotry to make')
@@ -266,8 +278,11 @@ def main():
     p_open = subparsers.add_parser('open', help='vim wrapper to open files')
     p_open.add_argument('file', nargs="?", help='filename to open')
     p_open.add_argument('-t', dest='tag', help='open tag')
-    p_open.add_argument('-g', dest='gui', action='store_true', help='use gvim instead of vim')
     p_open.add_argument("extra_args", nargs="*", help="extra arguments that pass to vim")
+
+    p_live = subparsers.add_parser('lv', help='live grep without tags and cscope')
+    p_live.add_argument('-r', dest='rg', help='init pattern to search with ripgrep')
+    p_live.add_argument("extra_args", nargs="*", help="extra arguments that pass to vim")
 
     args = parser.parse_args()
     avim = AVIM()
@@ -281,6 +296,8 @@ def main():
         avim.do_info()
     elif args.action == 'open':
         avim.do_open(args)
+    elif args.action == 'lv':
+        avim.live_grep(args)
 
 
 if __name__ == '__main__':
