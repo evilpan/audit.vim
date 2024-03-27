@@ -8,6 +8,7 @@ import subprocess as sb
 from pathlib import Path
 
 WORKSPACE = os.path.expanduser("~/.audit.vim")
+VIM = "view"
 
 def log(msg, *args, **kwargs):
     print('[+]', msg, *args, **kwargs)
@@ -221,9 +222,7 @@ class AVIM:
     def do_open(self, args):
         sessions = self.sessions
         env = os.environ.copy()
-        vim = 'vim'
-        if args.gui:
-            vim = 'gvim'
+        vim = f'g{VIM}' if args.gui else VIM
         cmd = [vim, '-M', '-n']
         if args.tag:
             cmd.extend(['-t', args.tag])
@@ -248,9 +247,7 @@ class AVIM:
         sb.call(cmd, env=env)
 
     def live_grep(self, args):
-        vim = 'vim'
-        if args.gui:
-            vim = 'gvim'
+        vim = f'g{VIM}' if args.gui else VIM
         cmd = [vim, '-c', 'set noautochdir']
         if args.rg:
             cmd.extend(['-c', f'RG {args.rg}'])
