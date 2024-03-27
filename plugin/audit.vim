@@ -33,26 +33,27 @@ endfunction
 nnoremap [[ [{
 nnoremap ]] ]}
 
+" ReadOnly Mode
 if $AVIM_SRC != ""
-    augroup smartchdir
-        " disable smart directory changing
-        autocmd!
-    augroup END
-    " remap JK to navigate quickfix
-    nnoremap J :cnext<cr>
-    nnoremap K :cprev<cr>
-    nnoremap H :colder<cr>
-    nnoremap L :cnewer<cr>
+  augroup smartchdir
+      " disable smart directory changing
+      autocmd!
+      set noautochdir
+  augroup END
+  " remap JK to navigate quickfix
+  nnoremap J :cnext<cr>
+  nnoremap K :cprev<cr>
+  nnoremap H :colder<cr>
+  nnoremap L :cnewer<cr>
 
-    " remap movement shortcuts
-    nnoremap o 2jzz
-    nnoremap i 2kzz
-    nnoremap u <c-y>
-    nnoremap d <c-e>
+  " remap movement shortcuts
+  nnoremap o 2jzz
+  nnoremap i 2kzz
+  nnoremap u <c-y>
+  nnoremap d <c-e>
 
-    let g:asyncrun_root = $AVIM_SRC
-    lcd $AVIM_SRC
-else
+  let g:asyncrun_root = $AVIM_SRC
+  lcd $AVIM_SRC
 endif
 
 " augroup vimrc

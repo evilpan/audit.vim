@@ -248,12 +248,14 @@ class AVIM:
 
     def live_grep(self, args):
         vim = f'g{VIM}' if args.gui else VIM
-        cmd = [vim, '-c', 'set noautochdir']
+        env = os.environ
+        env['AVIM_SRC'] = args.root
+        cmd = [vim]
         if args.rg:
             cmd.extend(['-c', f'RG {args.rg}'])
         else:
             cmd.extend(['-c', 'Files'])
-        sb.call(cmd)
+        sb.call(cmd, env=env)
 
 
 def main():
@@ -279,6 +281,8 @@ def main():
 
     p_live = subparsers.add_parser('lv', help='live grep without tags and cscope')
     p_live.add_argument('-r', dest='rg', help='init pattern to search with ripgrep')
+    p_live.add_argument('root', nargs='?', default=os.getcwd())
+
     p_live.add_argument("extra_args", nargs="*", help="extra arguments that pass to vim")
 
     args = parser.parse_args()
