@@ -247,6 +247,9 @@ class AVIM:
         sb.call(cmd, env=env)
 
     def live_grep(self, args):
+        if not os.path.exists(args.root):
+            log(f"AVIM_SRC not exists: {args.root}")
+            return
         vim = f'g{VIM}' if args.gui else VIM
         env = os.environ
         env['AVIM_SRC'] = args.root
