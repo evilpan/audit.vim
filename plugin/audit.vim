@@ -51,6 +51,12 @@ if $AVIM_SRC != ""
   nnoremap i 2kzz
   nnoremap u <c-y>
   nnoremap d <c-e>
+  nnoremap c :nohlsearch<CR>
+  nnoremap s *
+  nnoremap a <Nop>
+  nnoremap x <Nop>
+  nnoremap r <Nop>
+  nnoremap p <Nop>
 
   let g:asyncrun_root = $AVIM_SRC
   lcd $AVIM_SRC
