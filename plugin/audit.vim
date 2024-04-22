@@ -47,16 +47,18 @@ if $AVIM_SRC != ""
   nnoremap L :cnewer<cr>
 
   " remap movement shortcuts
-  nnoremap o 2jzz
-  nnoremap i 2kzz
-  nnoremap u <c-y>
-  nnoremap d <c-e>
+  nnoremap i 5k
+  nnoremap o 5j
+  nnoremap u 5<c-y>
+  nnoremap d 5<c-e>
   nnoremap c :nohlsearch<CR>
-  nnoremap s *
-  nnoremap a <Nop>
+  nnoremap a zz
   nnoremap x <Nop>
-  nnoremap r <Nop>
   nnoremap p <Nop>
+  " Folding
+  nnoremap r vi{zf
+  nnoremap R zfa{
+  nnoremap s za
 
   let g:asyncrun_root = $AVIM_SRC
   lcd $AVIM_SRC

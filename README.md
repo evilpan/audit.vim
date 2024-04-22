@@ -44,6 +44,19 @@ Extra tools and plugins:
 
 F2 - search with rg
 i/o - move up/down
+u/d - page up/down
+
+r/R - create fold for current block
 ```
 
 > Note: the `<leader>` is config by user, which is `,` for me.
+
+# VIM Tips
+
+
+## Fold
+
+- za - toggle open/close fold
+- zd - delete fold
+- zf - create fold
+- zfa} - create fold for current block
