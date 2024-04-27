@@ -15,9 +15,7 @@ which contains:
 
 # Install
 ```sh
-brew install universal-ctags
-brew install cscope
-python3 -m pip install -U prettytable
+python3 -m pip install -U rich
 make install
 ```
 
@@ -26,7 +24,20 @@ Extra tools and plugins:
 - [taglist.vim](https://www.vim.org/scripts/script.php?script_id=273) -- left side taglist
 - [asyncrun.vim](https://github.com/skywind3000/asyncrun.vim) -- run shell command async in vim.
 - [ripgrep](https://github.com/BurntSushi/ripgrep) -- rg tool to perform fast search.
-- [fzf](https://github.com/junegunn/fzf) -- fuzzy search path, not used yet.
+- [fzf](https://github.com/junegunn/fzf) -- fuzzy search path.
+
+## macOS
+
+```sh
+brew install universal-ctags
+brew install cscope
+```
+
+## Linux
+
+```sh
+sudo apt install -y exuberant-ctags cscope
+```
 
 # Quick Start
 

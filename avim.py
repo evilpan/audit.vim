@@ -6,9 +6,12 @@ import shutil
 import argparse
 import subprocess as sb
 from pathlib import Path
+from rich.console import Console
+from rich.table import Table
 
 WORKSPACE = os.path.expanduser("~/.audit.vim")
 VIM = "view"
+CONN = Console()
 
 def log(msg, *args, **kwargs):
     print('[+]', msg, *args, **kwargs)
@@ -208,16 +211,17 @@ class AVIM:
         self.save_sessions(sessions)
 
     def do_info(self):
-        from prettytable import PrettyTable
         sessions = self.sessions
+        if not sessions:
+            log("No data")
+            return
         fields = ['source', 'files', 'tags', 'cscope']
-        t = PrettyTable(field_names=fields)
-        t.align = "l"
+        t = Table(*fields)
         for src, data in sessions.items():
             proj = Project(src, data)
-            row = [src, _num_lines(proj.f_list), _filesz(proj.f_tags), _filesz(proj.f_csdb)]
-            t.add_row(row)
-        print(t)
+            row = [src, str(_num_lines(proj.f_list)), _filesz(proj.f_tags), _filesz(proj.f_csdb)]
+            t.add_row(*row)
+        CONN.print(t)
 
     def do_open(self, args):
         sessions = self.sessions
