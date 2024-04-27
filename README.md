@@ -1,45 +1,50 @@
-# VIM Audit
+# Audit.VIM
 
-Light-weight code audit with VIM
+light weight code audit (code review) tool based on VIM.
+
+![audit.vim](https://img-blog.csdnimg.cn/direct/10717e760e96410b93c1cf02269f8c56.png)
 
 which contains:
 
 - A shell script wrapper
 - A vim plugin
 
-# Reference
-
-- https://github.com/universal-ctags/ctags
-- https://github.com/chazy/cscope_maps/blob/master/plugin/cscope_maps.vim
-- cscope.vim
-
 # Install
+
 ```sh
 python3 -m pip install -U rich
 make install
 ```
 
-Extra tools and plugins:
+Required plugins:
 
-- [taglist.vim](https://www.vim.org/scripts/script.php?script_id=273) -- left side taglist
-- [asyncrun.vim](https://github.com/skywind3000/asyncrun.vim) -- run shell command async in vim.
-- [ripgrep](https://github.com/BurntSushi/ripgrep) -- rg tool to perform fast search.
-- [fzf](https://github.com/junegunn/fzf) -- fuzzy search path.
+- [vim-scripts/taglist.vim](https://www.vim.org/scripts/script.php?script_id=273) - left side taglist
+- [skywind3000/asyncrun.vim](https://github.com/skywind3000/asyncrun.vim) - run shell command async in vim
+- junegunn/fzf
+- junegunn/fzf.vim
+
+External command-line tools:
+
+- [ctags](https://github.com/universal-ctags/ctags) - Universal Ctags；
+- [cscope](https://cscope.sourceforge.net/) - search for symbol, definition, etc.
+- [ripgrep](https://github.com/BurntSushi/ripgrep) - rg tool to perform fast search
+- [fzf](https://github.com/junegunn/fzf) - used for fuzzy search
 
 ## macOS
 
 ```sh
-brew install universal-ctags
-brew install cscope
+brew install universal-ctags cscope
 ```
 
 ## Linux
 
 ```sh
-sudo apt install -y exuberant-ctags cscope
+sudo apt install -y universal-ctags cscope
 ```
 
-# Quick Start
+# VIM Tips
+
+Shortcuts defined in audit.vim:
 
 ```
 <leader>fs - find symbol
@@ -62,12 +67,19 @@ r/R - create fold for current block
 
 > Note: the `<leader>` is config by user, which is `,` for me.
 
-# VIM Tips
+## Mark
 
+```
+m{a-zA-Z}		    Set mark {a-zA-Z} at cursor position.
+'{a-z}  `{a-z}		Jump to the mark {a-z} in the current buffer.
+:marks              List all current marks.
+```
 
-## Fold
+## Folding
 
-- za - toggle open/close fold
-- zd - delete fold
-- zf - create fold
-- zfa} - create fold for current block
+```
+za      toggle open/close fold
+zd      delete fold
+zf      create fold
+zfa}    create fold for current block
+```

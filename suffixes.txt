@@ -24,6 +24,8 @@
 .hs
 .html
 .hxx
+.in
+.inc
 .ini
 .java
 .js

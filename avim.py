@@ -93,7 +93,7 @@ class Project(object):
                 if exc:
                     num_excluded += 1
                     continue
-            if p.suffix in suffixes:
+            if p.suffix.lower() in suffixes:
                 # relative path
                 out.append(str(p))
             else:
@@ -158,7 +158,8 @@ class AVIM:
         out = set()
         with open(self.suffix_file, 'r') as f:
             for line in f:
-                out.add(line.strip())
+                ft = line.strip()
+                out.add(ft.lower())
         return list(out)
 
     def save_sessions(self, sessions):
