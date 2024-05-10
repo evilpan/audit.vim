@@ -98,8 +98,13 @@ nnoremap <leader>o :TlistToggle<CR>
 " }}}
 
 " cscope shortcuts --- {{{
-if $AVIM_CSDB != ""
-  silent cs add $AVIM_CSDB
+if has("cscope")
+  set cscopetag           " use cscope tag
+  set cscopetagorder=1    " cstag search ctags first
+  set cscopeverbose       " verbose output
+  " set cscoperelative
+  set cscopequickfix=s-,c-,d-,i-,t-,e-,a-,g-
+  set cspc=3
 endif
 
 function CScopeFind(key, val)
@@ -116,13 +121,8 @@ function CScopeFind(key, val)
   call asyncrun#quickfix_toggle(12, 1)
 endfunction
 
-if has("cscope")
-  set cscopetag           " use cscope tag
-  set cscopetagorder=1    " cstag search ctags first
-  set cscopeverbose       " verbose output
-  " set cscoperelative
-  set cscopequickfix=s-,c-,d-,i-,t-,e-,a-,g-
-  set cspc=3
+if $AVIM_CSDB != ""
+  silent cs add $AVIM_CSDB
   " The following maps all invoke one of the following cscope search types:
   "
   "   's'   symbol: find all references to the token under cursor
@@ -147,14 +147,15 @@ if has("cscope")
   " nnoremap <leader>ft :call CScopeFind("t", expand("<cword>"))<CR>
   nnoremap <leader>ft :cstag <c-r>=expand('<cword>')<CR><CR>
   nnoremap <leader>fe :call CScopeFind("e", expand("<cword>"))<CR>
-  nnoremap <leader>ff :call CScopeFind("f", expand("<cfile>"))<CR>
+  " nnoremap <leader>ff :call CScopeFind("f", expand("<cfile>"))<CR>
   nnoremap <leader>fd :call CScopeFind("d", expand("<cword>"))<CR>
 endif
+
 " }}}
 
 " fzf.vim shortcuts --- {{{
-nnoremap <leader>f :call DoExecute("FZF -q", expand("<cword>"), 0)<cr>
-vnoremap <leader>f :call DoExecute("FZF -q", VisualSelectedText(), 0)<cr>
+nnoremap <leader>ff :call DoExecute("FZF -1 -q", expand("<cword>"), 0)<cr>
+vnoremap <leader>ff :call DoExecute("FZF -1 -q", VisualSelectedText(), 0)<cr>
 nnoremap <leader>r :call DoExecute("RG", expand("<cword>"), 0)<cr>
 vnoremap <leader>r :call DoExecute("RG", VisualSelectedText(), 2)<cr>
 """ }}}
