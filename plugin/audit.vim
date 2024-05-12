@@ -49,16 +49,16 @@ if $AVIM_SRC != ""
   " remap movement shortcuts
   nnoremap i 5k
   nnoremap o 5j
+  nnoremap O <Nop>
   nnoremap u 5<c-y>
   nnoremap d 5<c-e>
   nnoremap c :nohlsearch<CR>
-  nnoremap a zz
   nnoremap x <Nop>
   nnoremap p <Nop>
-  " Folding
-  nnoremap r vi{zf
-  nnoremap R zfa{
-  nnoremap s za
+  nnoremap a :bprev<CR>
+  nnoremap s :bnext<CR>
+  nnoremap S <Nop>
+  nnoremap B :Buffers<CR>
 
   let g:asyncrun_root = $AVIM_SRC
   lcd $AVIM_SRC
@@ -144,8 +144,11 @@ if $AVIM_CSDB != ""
   nnoremap <leader>fs :call CScopeFind("s", expand("<cword>"))<CR>
   nnoremap <leader>fg :call CScopeFind("g", expand("<cword>"))<CR>
   nnoremap <leader>fc :call CScopeFind("c", expand("<cword>"))<CR>
-  " nnoremap <leader>ft :call CScopeFind("t", expand("<cword>"))<CR>
-  nnoremap <leader>ft :cstag <c-r>=expand('<cword>')<CR><CR>
+  if $AVIM_TAGS != ""
+    nnoremap <leader>ft :cstag <c-r>=expand('<cword>')<CR><CR>
+  else
+    nnoremap <leader>ft :call CScopeFind("t", expand("<cword>"))<CR>
+  endif
   nnoremap <leader>fe :call CScopeFind("e", expand("<cword>"))<CR>
   " nnoremap <leader>ff :call CScopeFind("f", expand("<cfile>"))<CR>
   nnoremap <leader>fd :call CScopeFind("d", expand("<cword>"))<CR>

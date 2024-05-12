@@ -10,7 +10,6 @@ from rich.console import Console
 from rich.table import Table
 
 WORKSPACE = os.path.expanduser("~/.audit.vim")
-VIM = "view"
 CONN = Console()
 
 def log(msg, *args, **kwargs):
@@ -43,25 +42,32 @@ class Project(object):
     OUT_LIST = "files"
     OUT_TAGS = "tags"
     OUT_CSDB = "cscope"
+    OUT_BOOKMARK = "bookmark"
 
     def __init__(self, src, data=None):
         # full path
         self.src = os.path.abspath(src)
         self.data = data
 
-    def create(self, suffixes, excludes=None):
+    def create(self, suffixes, excludes=None, tag=True, cscope=True):
         if self.data is None:
             # create new data dir
             self.data = os.path.join(WORKSPACE, str(int(time.time())))
         if not os.path.exists(self.data):
             os.mkdir(self.data)
         self.collect_files(suffixes, excludes)
-        self.create_tags()
-        self.create_cscope()
+        if tag:
+            self.create_tags()
+        if cscope:
+            self.create_cscope()
 
     def remove(self):
         if os.path.exists(self.data):
             shutil.rmtree(self.data)
+
+    @property
+    def f_bookmark(self):
+        return os.path.join(self.data, self.OUT_BOOKMARK)
 
     @property
     def f_list(self):
@@ -164,7 +170,7 @@ class AVIM:
 
     def save_sessions(self, sessions):
         with open(self.index, "w") as f:
-            json.dump(sessions, f)
+            json.dump(sessions, f, indent=2)
 
     def find_project(self, startpoint, sessions):
         if startpoint == '':
@@ -191,7 +197,7 @@ class AVIM:
             # clear old session first
             self.do_rm(proj.src, sessions[proj.src])
         # create session
-        proj.create(self.suffixes, args.excludes)
+        proj.create(self.suffixes, args.excludes, args.tag, args.cscope)
         sessions = self.sessions
         sessions[proj.src] = proj.data
         self.save_sessions(sessions)
@@ -220,6 +226,8 @@ class AVIM:
         t = Table(*fields)
         for src, data in sessions.items():
             proj = Project(src, data)
+            if not os.path.exists(src):
+                src = f"[bold red]{src}[/]"
             row = [src, str(_num_lines(proj.f_list)), _filesz(proj.f_tags), _filesz(proj.f_csdb)]
             t.add_row(*row)
         CONN.print(t)
@@ -227,13 +235,18 @@ class AVIM:
     def do_open(self, args):
         sessions = self.sessions
         env = os.environ.copy()
-        vim = f'g{VIM}' if args.gui else VIM
-        cmd = [vim, '-M', '-n']
+        cmd = ['vim', '-R', '-M', '-n']
+        if args.gui:
+            cmd.append('-g')
         if args.tag:
             cmd.extend(['-t', args.tag])
         if args.file:
             cmd.append(args.file)
-            startpoint = os.path.dirname(os.path.abspath(args.file))
+            fd = os.path.abspath(args.file)
+            if os.path.isdir(fd):
+                startpoint = fd
+            else:
+                startpoint = os.path.dirname(fd)
         else:
             startpoint = os.getcwd()
         proj = self.find_project(startpoint, sessions)
@@ -251,47 +264,27 @@ class AVIM:
             cmd.extend(args.extra_args)
         sb.call(cmd, env=env)
 
-    def live_grep(self, args):
-        if not os.path.exists(args.root):
-            log(f"AVIM_SRC not exists: {args.root}")
-            return
-        vim = f'g{VIM}' if args.gui else VIM
-        env = os.environ
-        env['AVIM_SRC'] = args.root
-        cmd = [vim]
-        if args.rg:
-            cmd.extend(['-c', f'RG {args.rg}'])
-        else:
-            cmd.extend(['-c', 'Files'])
-        sb.call(cmd, env=env)
-
-
 def main():
     parser = argparse.ArgumentParser(description='lightweight code audit system with vim')
     subparsers = parser.add_subparsers(dest='action', help='sub actions')
-    parser.add_argument('-g', dest='gui', action='store_true', help='use gvim instead of vim')
 
     p_add = subparsers.add_parser('make', help='create new audit session from current directory')
     p_add.add_argument('src', nargs='?', default='.', help='project root direcotry to make')
-    p_add.add_argument('-k', dest='kernel', action='store_true', help='kernel mode')
-    p_add.add_argument('-e', dest='excludes', nargs='+', help='exclude pathes')
+    p_add.add_argument('-t', dest='tag', action='store_true', help='create tag')
+    p_add.add_argument('-c', dest='cscope', action='store_true', help='create cscope')
     p_add.add_argument('-f', dest='force', action='store_true', help='force overrite')
+    p_add.add_argument('-e', dest='excludes', nargs='+', help='exclude pathes')
 
     p_rm = subparsers.add_parser('rm', help='remove audit session')
     p_rm.add_argument('src', nargs='*', default=['.'])
 
-    p_info = subparsers.add_parser('info', help='show info of audit sessions')
+    p_info = subparsers.add_parser('info', help='list info of audit sessions')
 
     p_open = subparsers.add_parser('open', help='vim wrapper to open files')
     p_open.add_argument('file', nargs="?", help='filename to open')
     p_open.add_argument('-t', dest='tag', help='open tag')
+    p_open.add_argument('-g', dest='gui', action='store_true', help='use gvim instead of vim')
     p_open.add_argument("extra_args", nargs="*", help="extra arguments that pass to vim")
-
-    p_live = subparsers.add_parser('lv', help='live grep without tags and cscope')
-    p_live.add_argument('-r', dest='rg', help='init pattern to search with ripgrep')
-    p_live.add_argument('root', nargs='?', default=os.getcwd())
-
-    p_live.add_argument("extra_args", nargs="*", help="extra arguments that pass to vim")
 
     args = parser.parse_args()
     avim = AVIM()
@@ -305,8 +298,6 @@ def main():
         avim.do_info()
     elif args.action == 'open':
         avim.do_open(args)
-    elif args.action == 'lv':
-        avim.live_grep(args)
 
 
 if __name__ == '__main__':

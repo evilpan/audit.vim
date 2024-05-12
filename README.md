@@ -20,8 +20,12 @@ Required plugins:
 
 - [vim-scripts/taglist.vim](https://www.vim.org/scripts/script.php?script_id=273) - left side taglist
 - [skywind3000/asyncrun.vim](https://github.com/skywind3000/asyncrun.vim) - run shell command async in vim
-- [junegunn/fzf][fzf] - use the `:FZF` to search and jump across files
-- [junegunn/fzf.vim][fzf.vim] - use the `:RG`, `:Files`, `:Buffers` and other commands
+
+Useful plugins:
+
+- [junegunn/fzf][fzf] - for the `:FZF` to search and jump across files
+- [junegunn/fzf.vim][fzf.vim] - for the `:RG`, `:Files`, `:Buffers` and other commands
+- [MattesGroeger/vim-bookmarks][bookmark] - bookmark with comments
 
 External command-line tools:
 
@@ -47,22 +51,23 @@ sudo apt install -y universal-ctags cscope
 index a project:
 ```sh
 $ avim.py make -h
-usage: avim.py make [-h] [-k] [-e EXCLUDES [EXCLUDES ...]] [-f] [src]
+usage: avim.py make [-h] [-t] [-c] [-f] [-e EXCLUDES [EXCLUDES ...]] [src]
 
 positional arguments:
   src                   project root direcotry to make
 
 options:
   -h, --help            show this help message and exit
-  -k                    kernel mode
+  -t                    create tag
+  -c                    create cscope
+  -f                    force overrite
   -e EXCLUDES [EXCLUDES ...]
                         exclude pathes
-  -f                    force overrite
 ```
 
 for example:
 ```sh
-$ avim.py make /path/to/linux-1.11
+$ avim.py make -tc /path/to/linux-1.11
 ```
 
 list indexed projects:
@@ -84,25 +89,9 @@ $ avim.py rm /path/to/linux-1.11
 open vim/gvim of with indexed tags/cscopes:
 ```sh
 $ avim.py open .
-# or start with gvim
-$ avim.py -g open .
+# or start with GUI(gvim)
+$ avim.py open -g /src/project
 ```
-
-open vim without index file(livegrep), use fzf.vim for searching and jumping.
-```sh
-usage: avim.py lv [-h] [-r RG] [root] [extra_args ...]
-
-positional arguments:
-  root
-  extra_args  extra arguments that pass to vim
-
-options:
-  -h, --help  show this help message and exit
-  -r RG       init pattern to search with ripgrep
-
-```
-
-Some useful commands are `:FZF`, `:Files`, `:RG`, `:Marks`, `:Buffers`, see [fzf.vim][fzf.vim].
 
 # VIM Tips
 
@@ -123,8 +112,8 @@ Shortcuts defined in audit.vim:
 F2 - search current word or selected word with ripgrep
 i/o - move up/down
 u/d - page up/down
-
-r/R - create fold for current block
+a/s - go to previous/next buffer
+J/K - move up/down for quickfix matching
 ```
 
 > Note: the `<leader>` is config by user, which is `,` for me.
@@ -135,7 +124,18 @@ r/R - create fold for current block
 m{a-zA-Z}         Set mark {a-zA-Z} at cursor position.
 '{a-z} `{a-z}     Jump to the mark {a-z} in the current buffer.
 :marks            List all current marks.
+:Marks            List marks with fzf search.
 ```
+
+You can also use [vim-bookmarks][vim-bookmarks] plugin for better bookmarks support.
+
+| Action                                          | Shortcut    | Command                      |
+|-------------------------------------------------|-------------|------------------------------|
+| Add/remove bookmark at current line             | `mm`        | `:BookmarkToggle`            |
+| Add/edit/remove annotation at current line      | `mi`        | `:BookmarkAnnotate <TEXT>`   |
+| Show all bookmarks (toggle)                     | `ma`        | `:BookmarkShowAll`           |
+| Save all bookmarks to a file                    |             | `:BookmarkSave <FILE_PATH>`  |
+| Load bookmarks from a file                      |             | `:BookmarkLoad <FILE_PATH>`  |
 
 ## Folding
 
@@ -143,9 +143,12 @@ m{a-zA-Z}         Set mark {a-zA-Z} at cursor position.
 za      toggle open/close fold
 zd      delete fold
 zf      create fold
-zfa}    create fold for current block
+zfi}    create fold inside `{}` (excluding)
+zfa}    create fold inside `{}` (including)
 ```
 
 
 [fzf]: https://github.com/junegunn/fzf
 [fzf.vim]: https://github.com/junegunn/fzf.vim
+[bookmark]: https://github.com/MattesGroeger/vim-bookmarks
+[modes]: https://gist.github.com/kennypete/1fae2e48f5b0577f9b7b10712cec3212
