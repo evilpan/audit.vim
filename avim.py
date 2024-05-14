@@ -211,6 +211,7 @@ class AVIM:
         if src not in sessions:
             log("session not exist")
             return
+        src = os.path.abspath(src)
         proj = Project(src, sessions[src])
         proj.remove()
         log("remove session:", proj.src)
@@ -222,7 +223,7 @@ class AVIM:
         if not sessions:
             log("No data")
             return
-        fields = ['source', 'files', 'tags', 'cscope']
+        fields = ['location', 'files', 'ctags', 'cscope']
         t = Table(*fields)
         for src, data in sessions.items():
             proj = Project(src, data)
@@ -292,7 +293,6 @@ def main():
         avim.do_make(args)
     elif args.action == 'rm':
         for src in args.src:
-            src = os.path.abspath(src)
             avim.do_rm(src)
     elif args.action == 'info':
         avim.do_info()

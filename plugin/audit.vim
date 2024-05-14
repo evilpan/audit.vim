@@ -52,7 +52,7 @@ if $AVIM_SRC != ""
   nnoremap O <Nop>
   nnoremap u 5<c-y>
   nnoremap d 5<c-e>
-  nnoremap c :nohlsearch<CR>
+  nnoremap <silent><expr> c (&hls && v:hlsearch ? ':nohlsearch' : ':set hlsearch').'<cr>'
   nnoremap x <Nop>
   nnoremap p <Nop>
   nnoremap a :bprev<CR>
