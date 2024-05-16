@@ -5,6 +5,7 @@ import json
 import shutil
 import argparse
 import subprocess as sb
+import ast
 from pathlib import Path
 from rich.console import Console
 from rich.table import Table
@@ -34,7 +35,7 @@ def _num_lines(filename):
 
 def _filesz(filename):
     if not os.path.exists(filename):
-        return 'N/A'
+        return '-'
     return sizeof_fmt(os.stat(filename).st_size)
 
 
@@ -184,6 +185,19 @@ class AVIM:
             return None
         return self.find_project(parent, sessions)
 
+    def _read_bookmark(self, filename):
+        count = 0
+        if not os.path.exists(filename):
+            return count
+        with open(filename, 'r') as f:
+            _ = f.readline()
+            line = f.readline()
+        bm_sessions = line.split("=", 1)[1]
+        bm_sessions = ast.literal_eval(bm_sessions)
+        for bms in bm_sessions['default'].values():
+            count += len(bms)
+        return count
+
     def do_make(self, args):
         proj = Project(args.src)
         if not os.path.exists(proj.src):
@@ -218,18 +232,25 @@ class AVIM:
         del sessions[proj.src]
         self.save_sessions(sessions)
 
-    def do_info(self):
+    def do_info(self, args):
         sessions = self.sessions
         if not sessions:
             log("No data")
             return
-        fields = ['location', 'files', 'ctags', 'cscope']
+        fields = ['location', 'files', 'ctags', 'cscope', 'bookmark']
         t = Table(*fields)
         for src, data in sessions.items():
             proj = Project(src, data)
+            if args.filter:
+                lhs, rhs = args.filter, proj.src
+                if args.ignore_case:
+                    lhs, rhs = lhs.lower(), rhs.lower()
+                if lhs not in rhs:
+                    continue
             if not os.path.exists(src):
                 src = f"[bold red]{src}[/]"
-            row = [src, str(_num_lines(proj.f_list)), _filesz(proj.f_tags), _filesz(proj.f_csdb)]
+            bm = str(self._read_bookmark(proj.f_bookmark))
+            row = [src, str(_num_lines(proj.f_list)), _filesz(proj.f_tags), _filesz(proj.f_csdb), bm]
             t.add_row(*row)
         CONN.print(t)
 
@@ -256,6 +277,7 @@ class AVIM:
             env['AVIM_SRC'] = os.getcwd()
         else:
             env['AVIM_SRC'] = proj.src
+            env['AVIM_BOOKMARK'] = proj.f_bookmark
             if os.path.exists(proj.f_csdb):
                 env['AVIM_CSDB'] = proj.f_csdb
             if os.path.exists(proj.f_tags):
@@ -280,6 +302,8 @@ def main():
     p_rm.add_argument('src', nargs='*', default=['.'])
 
     p_info = subparsers.add_parser('info', help='list info of audit sessions')
+    p_info.add_argument("-i", dest="ignore_case", action="store_true", help="filter ignore case")
+    p_info.add_argument("filter", nargs="?", help="filter projects by location")
 
     p_open = subparsers.add_parser('open', help='vim wrapper to open files')
     p_open.add_argument('file', nargs="?", help='filename to open')
@@ -295,7 +319,7 @@ def main():
         for src in args.src:
             avim.do_rm(src)
     elif args.action == 'info':
-        avim.do_info()
+        avim.do_info(args)
     elif args.action == 'open':
         avim.do_open(args)
 

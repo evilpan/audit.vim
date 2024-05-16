@@ -64,6 +64,10 @@ if $AVIM_SRC != ""
   lcd $AVIM_SRC
 endif
 
+if $AVIM_BOOKMARK != ""
+  let g:bookmark_auto_save_file = $AVIM_BOOKMARK
+endif
+
 " augroup vimrc
 "     " open quickfix window if updated
 "     autocmd QuickFixCmdPost * botright copen 12

@@ -73,12 +73,13 @@ $ avim.py make -tc /path/to/linux-1.11
 list indexed projects:
 ```sh
 $ avim.py info
-┏━━━━━━━━━━━━━━━━━━━━┳━━━━━━━┳━━━━━━━━━┳━━━━━━━━┓
-┃ source             ┃ files ┃ tags    ┃ cscope ┃
-┡━━━━━━━━━━━━━━━━━━━━╇━━━━━━━╇━━━━━━━━━╇━━━━━━━━┩
-│ /data/src/project1 │ 2429  │ 10.7MB  │ 14.0MB │
-│ /data/src/project2 │ 17013 │ 103.7MB │ 84.8MB │
-└────────────────────┴───────┴─────────┴────────┘
+┏━━━━━━━━━━━┳━━━━━━━┳━━━━━━━━━┳━━━━━━━━━┳━━━━━━━━━━┓
+┃ location  ┃ files ┃ ctags   ┃ cscope  ┃ bookmark ┃
+┡━━━━━━━━━━━╇━━━━━━━╇━━━━━━━━━╇━━━━━━━━━╇━━━━━━━━━━┩
+│ /src/foo  │ 46    │ 257.8KB │ 134.9KB │ 0        │
+│ /src/bar  │ 852   │ 9.0MB   │ 1.9MB   │ 2        │
+│ /src/barz │ 10395 │ -       │ -       │ 5        │
+└───────────┴───────┴─────────┴─────────┴──────────┘
 ```
 
 remove an index:
@@ -127,13 +128,15 @@ m{a-zA-Z}         Set mark {a-zA-Z} at cursor position.
 :Marks            List marks with fzf search.
 ```
 
-You can also use [vim-bookmarks][vim-bookmarks] plugin for better bookmarks support.
+You can also use [vim-bookmarks][bookmark] plugin for better bookmarks support.
 
 | Action                                          | Shortcut    | Command                      |
 |-------------------------------------------------|-------------|------------------------------|
 | Add/remove bookmark at current line             | `mm`        | `:BookmarkToggle`            |
 | Add/edit/remove annotation at current line      | `mi`        | `:BookmarkAnnotate <TEXT>`   |
 | Show all bookmarks (toggle)                     | `ma`        | `:BookmarkShowAll`           |
+| Clear bookmarks in current buffer only          | `mc`        | `:BookmarkClear`             |
+| Clear bookmarks in all buffers                  | `mx`        | `:BookmarkClearAll`          |
 | Save all bookmarks to a file                    |             | `:BookmarkSave <FILE_PATH>`  |
 | Load bookmarks from a file                      |             | `:BookmarkLoad <FILE_PATH>`  |
 
