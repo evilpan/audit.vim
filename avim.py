@@ -89,6 +89,8 @@ class Project(object):
         num_ignored = 0
         num_excluded = 0
         for p in Path(self.src).glob("**/*"):
+            if p.is_symlink():
+                continue
             if not p.is_file():
                 continue
             if excludes:
