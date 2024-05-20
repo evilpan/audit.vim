@@ -6,6 +6,7 @@ import shutil
 import argparse
 import subprocess as sb
 import ast
+from datetime import datetime
 from pathlib import Path
 from rich.console import Console
 from rich.table import Table
@@ -65,6 +66,10 @@ class Project(object):
     def remove(self):
         if os.path.exists(self.data):
             shutil.rmtree(self.data)
+
+    @property
+    def timestamp(self):
+        return int(os.path.basename(self.data))
 
     @property
     def f_bookmark(self):
@@ -190,7 +195,7 @@ class AVIM:
     def _read_bookmark(self, filename):
         count = 0
         if not os.path.exists(filename):
-            return count
+            return '-'
         with open(filename, 'r') as f:
             _ = f.readline()
             line = f.readline()
@@ -239,8 +244,9 @@ class AVIM:
         if not sessions:
             log("No data")
             return
-        fields = ['location', 'files', 'ctags', 'cscope', 'bookmark']
+        fields = ['location', 'timestamp', 'files', 'ctags', 'cscope', 'bookmark']
         t = Table(*fields)
+        rows = []
         for src, data in sessions.items():
             proj = Project(src, data)
             if args.filter:
@@ -251,9 +257,18 @@ class AVIM:
                     continue
             if not os.path.exists(src):
                 src = f"[bold red]{src}[/]"
-            bm = str(self._read_bookmark(proj.f_bookmark))
-            row = [src, str(_num_lines(proj.f_list)), _filesz(proj.f_tags), _filesz(proj.f_csdb), bm]
-            t.add_row(*row)
+            timestamp = datetime.fromtimestamp(proj.timestamp)
+            rows.append([
+                src,
+                timestamp,
+                _num_lines(proj.f_list),
+                _filesz(proj.f_tags),
+                _filesz(proj.f_csdb),
+                self._read_bookmark(proj.f_bookmark),
+            ])
+        idx = fields.index(args.sortby)
+        for row in sorted(rows, key = lambda r: r[idx], reverse=True):
+            t.add_row(*[str(col) for col in row])
         CONN.print(t)
 
     def do_open(self, args):
@@ -303,9 +318,12 @@ def main():
     p_rm = subparsers.add_parser('rm', help='remove audit session')
     p_rm.add_argument('src', nargs='*', default=['.'])
 
-    p_info = subparsers.add_parser('info', help='list info of audit sessions')
+    p_info = subparsers.add_parser('info', help='list info of audit sessions',
+            formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     p_info.add_argument("-i", dest="ignore_case", action="store_true", help="filter ignore case")
     p_info.add_argument("filter", nargs="?", help="filter projects by location")
+    p_info.add_argument("-s", dest="sortby", choices=["location", "files", "timestamp"],
+            default="timestamp", help="sort results by column")
 
     p_open = subparsers.add_parser('open', help='vim wrapper to open files')
     p_open.add_argument('file', nargs="?", help='filename to open')
