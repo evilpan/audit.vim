@@ -5,6 +5,7 @@ import json
 import shutil
 import argparse
 import subprocess as sb
+import fnmatch
 import ast
 from datetime import datetime
 from pathlib import Path
@@ -223,20 +224,27 @@ class AVIM:
         sessions[proj.src] = proj.data
         self.save_sessions(sessions)
 
-    def do_rm(self, src, sessions=None):
+    def do_rm(self, src: str, sessions=None, is_glob=False):
         """
         src: abspath of source tree
         """
+        matches = []
         if sessions is None:
             sessions = self.sessions
-        if src not in sessions:
-            log("session not exist")
+        if is_glob:
+            matches.extend(fnmatch.filter(sessions.keys(), src))
+        else:
+            key = os.path.abspath(src)
+            if key in sessions:
+                matches.append(key)
+        if not matches:
+            log(f"not match any sessions: {src}")
             return
-        src = os.path.abspath(src)
-        proj = Project(src, sessions[src])
-        proj.remove()
-        log("remove session:", proj.src)
-        del sessions[proj.src]
+        for key in matches:
+            proj = Project(key, sessions[key])
+            proj.remove()
+            log("remove session:", proj.src)
+            del sessions[proj.src]
         self.save_sessions(sessions)
 
     def do_info(self, args):
@@ -316,6 +324,7 @@ def main():
     p_add.add_argument('-e', dest='excludes', nargs='+', help='exclude pathes')
 
     p_rm = subparsers.add_parser('rm', help='remove audit session')
+    p_rm.add_argument('-g', '--glob', action='store_true', help='enable glob match')
     p_rm.add_argument('src', nargs='*', default=['.'])
 
     p_info = subparsers.add_parser('info', help='list info of audit sessions',
@@ -337,7 +346,7 @@ def main():
         avim.do_make(args)
     elif args.action == 'rm':
         for src in args.src:
-            avim.do_rm(src)
+            avim.do_rm(src, is_glob=args.glob)
     elif args.action == 'info':
         avim.do_info(args)
     elif args.action == 'open':
