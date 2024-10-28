@@ -86,6 +86,9 @@ else
   " omit search path
   nnoremap <silent><F2> :AsyncRun! -cwd=<root> rg -n -w <C-R><C-W> <cr>
   vnoremap <silent><F2> :call DoExecute("AsyncRun! -cwd=<root> rg -n", VisualSelectedText(), 3)<cr>
+
+  " search for method definition
+  nnoremap <silent><F3> :AsyncRun! -cwd=<root> rg -n " <C-R><C-W>\(.*\) *\{" <cr>
 endif
 """ }}}
 
