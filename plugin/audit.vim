@@ -88,7 +88,7 @@ else
   vnoremap <silent><F2> :call DoExecute("AsyncRun! -cwd=<root> rg -n", VisualSelectedText(), 3)<cr>
 
   " search for method definition
-  nnoremap <silent><F3> :AsyncRun! -cwd=<root> rg -n " <C-R><C-W>\(.*\) *\{" <cr>
+  nnoremap <silent><F3> :AsyncRun! -cwd=<root> rg -n " <C-R><C-W>\(.*\) .*\{" <cr>
 endif
 """ }}}
 
