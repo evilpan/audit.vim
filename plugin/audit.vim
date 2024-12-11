@@ -84,11 +84,11 @@ else
   " noremap <silent><F2> :AsyncRun! -cwd=<root> grep -n -s -R <C-R><C-W>
   "         \ --include='*.h' --include='*.c*' '<root>' <cr>
   " omit search path
-  nnoremap <silent><F2> :AsyncRun! -cwd=<root> rg -n -w <C-R><C-W> <cr>
-  vnoremap <silent><F2> :call DoExecute("AsyncRun! -cwd=<root> rg -n", VisualSelectedText(), 3)<cr>
+  nnoremap <silent><F2> :AsyncRun! -errorformat=\%f:\%l:\%c:\%m -cwd=<root> rg --vimgrep -w <C-R><C-W> <cr>
+  vnoremap <silent><F2> :call DoExecute("AsyncRun! -errorformat=\\%f:\\%l:\\%c:\\%m -cwd=<root> rg --vimgrep -w", VisualSelectedText(), 3)<cr>
 
   " search for method definition
-  nnoremap <silent><F3> :AsyncRun! -cwd=<root> rg -n " <C-R><C-W>\(.*\) .*\{" <cr>
+  nnoremap <silent><F3> :AsyncRun! -errorformat=\%f:\%l:\%c:\%m -cwd=<root> rg --vimgrep " <C-R><C-W>\(.*\) .*\{" <cr>
 endif
 """ }}}
 
